@@ -20,10 +20,10 @@ setopt INTERACTIVE_COMMENTS
 setopt PROMPT_SUBST
 
 # Modern CLI tool replacements.
-alias ls='eza --group-directories-first'
-alias ll='eza -lah --git --group-directories-first'
-alias la='eza -a --group-directories-first'
-alias lt='eza --tree --level=2'
+alias ls='eza --icons --group-directories-first'
+alias ll='eza --icons -lah --git --group-directories-first'
+alias la='eza --icons -a --group-directories-first'
+alias lt='eza --icons --tree --level=2'
 alias cat='bat --paging=never'
 alias grep='rg'
 alias find='fd'
