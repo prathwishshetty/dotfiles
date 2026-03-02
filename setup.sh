@@ -19,10 +19,11 @@ info "Installing packages via Homebrew..."
 brew install ghostty tmux git gh lazygit \
   zsh-syntax-highlighting zsh-autosuggestions \
   fzf eza bat ripgrep fd zoxide git-delta \
-  dust btop
+  dust btop neovim
 
 # --- Create directories ---
 mkdir -p ~/.config/ghostty
+mkdir -p ~/.config/nvim
 mkdir -p ~/.local/bin
 
 # --- Symlink helper ---
@@ -43,10 +44,19 @@ link_file "$DOTFILES_DIR/ghostty/config" "$HOME/.config/ghostty/config"
 link_file "$DOTFILES_DIR/tmux.conf"      "$HOME/.tmux.conf"
 link_file "$DOTFILES_DIR/zshrc"          "$HOME/.zshrc"
 link_file "$DOTFILES_DIR/gitconfig"      "$HOME/.gitconfig"
+link_file "$DOTFILES_DIR/nvim/init.lua"  "$HOME/.config/nvim/init.lua"
 link_file "$DOTFILES_DIR/dev-session"    "$HOME/.local/bin/dev-session"
 
 # --- Make dev-session executable ---
 chmod +x "$DOTFILES_DIR/dev-session"
+
+# --- Install TPM (tmux plugin manager) ---
+if [ ! -d "$HOME/.tmux/plugins/tpm" ]; then
+  info "Installing TPM..."
+  git clone https://github.com/tmux-plugins/tpm "$HOME/.tmux/plugins/tpm"
+else
+  info "TPM already installed, skipping."
+fi
 
 # --- Git identity (stored in ~/.gitconfig.local) ---
 if [ ! -f "$HOME/.gitconfig.local" ]; then

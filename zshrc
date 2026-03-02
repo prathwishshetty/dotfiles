@@ -1,5 +1,5 @@
 # Fast, practical defaults for terminal-heavy work.
-export EDITOR=vim
+export EDITOR=nvim
 export VISUAL="$EDITOR"
 export PAGER=less
 export LESS='-FRX'
