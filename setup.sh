@@ -19,7 +19,7 @@ info "Installing packages via Homebrew..."
 brew install ghostty tmux git gh lazygit \
   zsh-syntax-highlighting zsh-autosuggestions \
   fzf eza bat ripgrep fd zoxide git-delta \
-  dust btop neovim
+  dust btop neovim starship
 
 # --- Create directories ---
 mkdir -p ~/.config/ghostty
@@ -44,6 +44,7 @@ link_file "$DOTFILES_DIR/ghostty/config" "$HOME/.config/ghostty/config"
 link_file "$DOTFILES_DIR/tmux.conf"      "$HOME/.tmux.conf"
 link_file "$DOTFILES_DIR/zshrc"          "$HOME/.zshrc"
 link_file "$DOTFILES_DIR/gitconfig"      "$HOME/.gitconfig"
+link_file "$DOTFILES_DIR/starship.toml"  "$HOME/.config/starship.toml"
 link_file "$DOTFILES_DIR/nvim/init.lua"  "$HOME/.config/nvim/init.lua"
 link_file "$DOTFILES_DIR/dev-session"    "$HOME/.local/bin/dev-session"
 

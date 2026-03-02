@@ -19,19 +19,6 @@ setopt HIST_REDUCE_BLANKS
 setopt INTERACTIVE_COMMENTS
 setopt PROMPT_SUBST
 
-autoload -Uz colors vcs_info
-colors
-
-zstyle ':vcs_info:*' enable git
-zstyle ':vcs_info:git:*' formats ' %F{214}[%b]%f'
-
-precmd() {
-  vcs_info
-}
-
-PROMPT='%F{81}%n@%m%f %F{39}%1~%f${vcs_info_msg_0_}
-%(?.%F{76}.%F{196})%# %f'
-
 # Modern CLI tool replacements.
 alias ls='eza --group-directories-first'
 alias ll='eza -lah --git --group-directories-first'
@@ -79,3 +66,6 @@ eval "$(zoxide init zsh 2>/dev/null)"
 # Syntax highlighting and autosuggestions (must be near end of .zshrc).
 source /opt/homebrew/share/zsh-syntax-highlighting/zsh-syntax-highlighting.zsh 2>/dev/null
 source /opt/homebrew/share/zsh-autosuggestions/zsh-autosuggestions.zsh 2>/dev/null
+
+# Starship prompt (must be last).
+eval "$(starship init zsh 2>/dev/null)"
