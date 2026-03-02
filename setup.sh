@@ -6,6 +6,7 @@ DOTFILES_DIR="$(cd "$(dirname "$0")" && pwd)"
 
 info() { printf '\033[1;34m==> %s\033[0m\n' "$1"; }
 warn() { printf '\033[1;33m==> %s\033[0m\n' "$1"; }
+fail() { printf '\033[1;31m==> %s\033[0m\n' "$1"; }
 
 # --- Install Homebrew if missing ---
 if ! command -v brew >/dev/null 2>&1; then
@@ -16,10 +17,24 @@ fi
 
 # --- Install dependencies ---
 info "Installing packages via Homebrew..."
-brew install ghostty tmux git gh lazygit \
-  zsh-syntax-highlighting zsh-autosuggestions \
-  fzf eza bat ripgrep fd zoxide git-delta \
+packages=(
+  ghostty tmux git gh lazygit
+  zsh-syntax-highlighting zsh-autosuggestions
+  fzf eza bat ripgrep fd zoxide git-delta
   dust btop neovim starship
+)
+failed_packages=()
+for pkg in "${packages[@]}"; do
+  if brew install "$pkg" 2>/dev/null; then
+    info "Installed $pkg"
+  else
+    fail "Failed to install $pkg"
+    failed_packages+=("$pkg")
+  fi
+done
+if [ ${#failed_packages[@]} -gt 0 ]; then
+  warn "Failed packages: ${failed_packages[*]}"
+fi
 
 # --- Create directories ---
 mkdir -p ~/.config/ghostty
