@@ -19,6 +19,11 @@ setopt HIST_REDUCE_BLANKS
 setopt INTERACTIVE_COMMENTS
 setopt PROMPT_SUBST
 
+# Tab completion system.
+autoload -Uz compinit && compinit
+zstyle ':completion:*' menu select
+zstyle ':completion:*' matcher-list 'm:{a-z}={A-Z}'
+
 # Modern CLI tool replacements.
 alias ls='eza --icons --group-directories-first'
 alias ll='eza --icons -lah --git --group-directories-first'
@@ -66,6 +71,13 @@ eval "$(zoxide init zsh 2>/dev/null)"
 # Syntax highlighting and autosuggestions (must be near end of .zshrc).
 source /opt/homebrew/share/zsh-syntax-highlighting/zsh-syntax-highlighting.zsh 2>/dev/null
 source /opt/homebrew/share/zsh-autosuggestions/zsh-autosuggestions.zsh 2>/dev/null
+ZSH_AUTOSUGGEST_ACCEPT_WIDGETS+=(forward-char end-of-line)
+ZSH_AUTOSUGGEST_STRATEGY=(history completion)
+
+# Allow machine-local shell settings without forking the shared dotfiles.
+if [ -f "$HOME/.zshrc.local" ]; then
+  source "$HOME/.zshrc.local"
+fi
 
 # Starship prompt (must be last).
 eval "$(starship init zsh 2>/dev/null)"

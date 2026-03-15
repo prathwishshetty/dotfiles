@@ -3,79 +3,104 @@ set -eu
 set -o pipefail
 
 DOTFILES_DIR="$(cd "$(dirname "$0")" && pwd)"
+PACKAGES=(zsh git tmux ghostty localbin nvim starship)
 
 info() { printf '\033[1;34m==> %s\033[0m\n' "$1"; }
 warn() { printf '\033[1;33m==> %s\033[0m\n' "$1"; }
 fail() { printf '\033[1;31m==> %s\033[0m\n' "$1"; }
 
-# --- Install Homebrew if missing ---
-if ! command -v brew >/dev/null 2>&1; then
+ensure_brew() {
+  if command -v brew >/dev/null 2>&1; then
+    return
+  fi
+
   info "Installing Homebrew..."
   /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
   eval "$(/opt/homebrew/bin/brew shellenv 2>/dev/null || /usr/local/bin/brew shellenv 2>/dev/null)"
-fi
-
-# --- Install dependencies ---
-info "Installing packages via Homebrew..."
-packages=(
-  ghostty tmux git gh lazygit
-  zsh-syntax-highlighting zsh-autosuggestions
-  fzf eza bat ripgrep fd zoxide git-delta
-  dust btop neovim starship
-)
-failed_packages=()
-for pkg in "${packages[@]}"; do
-  if brew install "$pkg" 2>/dev/null; then
-    info "Installed $pkg"
-  else
-    fail "Failed to install $pkg"
-    failed_packages+=("$pkg")
-  fi
-done
-if [ ${#failed_packages[@]} -gt 0 ]; then
-  warn "Failed packages: ${failed_packages[*]}"
-fi
-
-# --- Create directories ---
-mkdir -p ~/.config/ghostty
-mkdir -p ~/.config/nvim
-mkdir -p ~/.local/bin
-
-# --- Symlink helper ---
-link_file() {
-  local src="$1" dst="$2"
-  if [ -L "$dst" ]; then
-    rm "$dst"
-  elif [ -e "$dst" ]; then
-    warn "Backing up $dst → ${dst}.backup"
-    mv "$dst" "${dst}.backup"
-  fi
-  ln -s "$src" "$dst"
-  info "Linked $dst → $src"
 }
 
-# --- Symlink dotfiles ---
-link_file "$DOTFILES_DIR/ghostty/config" "$HOME/.config/ghostty/config"
-link_file "$DOTFILES_DIR/tmux.conf"      "$HOME/.tmux.conf"
-link_file "$DOTFILES_DIR/zshrc"          "$HOME/.zshrc"
-link_file "$DOTFILES_DIR/gitconfig"      "$HOME/.gitconfig"
-link_file "$DOTFILES_DIR/starship.toml"  "$HOME/.config/starship.toml"
-link_file "$DOTFILES_DIR/nvim/init.lua"  "$HOME/.config/nvim/init.lua"
-link_file "$DOTFILES_DIR/dev-session"    "$HOME/.local/bin/dev-session"
+install_packages() {
+  info "Installing packages via Homebrew..."
 
-# --- Make dev-session executable ---
-chmod +x "$DOTFILES_DIR/dev-session"
+  local packages=(
+    stow ghostty tmux git gh lazygit
+    zsh-syntax-highlighting zsh-autosuggestions
+    fzf eza bat ripgrep fd zoxide git-delta
+    dust btop neovim starship
+  )
+  local failed_packages=()
+  local pkg
 
-# --- Install TPM (tmux plugin manager) ---
-if [ ! -d "$HOME/.tmux/plugins/tpm" ]; then
+  for pkg in "${packages[@]}"; do
+    if brew list "$pkg" >/dev/null 2>&1 || brew install "$pkg" 2>/dev/null; then
+      info "Ready: $pkg"
+    else
+      fail "Failed to install $pkg"
+      failed_packages+=("$pkg")
+    fi
+  done
+
+  if [ ${#failed_packages[@]} -gt 0 ]; then
+    warn "Failed packages: ${failed_packages[*]}"
+  fi
+}
+
+backup_conflict() {
+  local target="$1"
+
+  if [ -L "$target" ]; then
+    local link_target
+    link_target="$(readlink "$target" || true)"
+    if [[ "$link_target" != "$DOTFILES_DIR"* ]]; then
+      info "Removing conflicting symlink $target -> $link_target"
+      rm -f "$target"
+    fi
+    return
+  fi
+
+  if [ -e "$target" ]; then
+    local backup="${target}.backup.$(date +%Y%m%d%H%M%S)"
+    warn "Backing up $target -> $backup"
+    mv "$target" "$backup"
+  fi
+}
+
+prepare_targets() {
+  mkdir -p "$HOME/.config/ghostty" "$HOME/.config/nvim" "$HOME/.local/bin"
+
+  backup_conflict "$HOME/.zshrc"
+  backup_conflict "$HOME/.gitconfig"
+  backup_conflict "$HOME/.tmux.conf"
+  backup_conflict "$HOME/.config/ghostty/config"
+  backup_conflict "$HOME/.local/bin/dev-session"
+  backup_conflict "$HOME/.config/nvim/init.lua"
+  backup_conflict "$HOME/.config/starship.toml"
+}
+
+stow_packages() {
+  info "Previewing Stow changes..."
+  stow -n -v -t "$HOME" "${PACKAGES[@]}"
+
+  info "Applying Stow packages..."
+  stow -R -t "$HOME" "${PACKAGES[@]}"
+}
+
+install_tpm() {
+  if [ -d "$HOME/.tmux/plugins/tpm" ]; then
+    info "TPM already installed, skipping."
+    return
+  fi
+
   info "Installing TPM..."
   git clone https://github.com/tmux-plugins/tpm "$HOME/.tmux/plugins/tpm"
-else
-  info "TPM already installed, skipping."
-fi
+}
 
-# --- Git identity (stored in ~/.gitconfig.local) ---
-if [ ! -f "$HOME/.gitconfig.local" ]; then
+setup_git_identity() {
+  if [ -f "$HOME/.gitconfig.local" ]; then
+    info "~/.gitconfig.local already exists, skipping Git identity setup."
+    return
+  fi
+
   info "Setting up Git identity..."
   printf "Enter your Git name: "
   read -r git_name
@@ -87,8 +112,13 @@ if [ ! -f "$HOME/.gitconfig.local" ]; then
 	email = $git_email
 EOF
   info "Saved Git identity to ~/.gitconfig.local"
-else
-  info "~/.gitconfig.local already exists, skipping Git identity setup."
-fi
+}
+
+ensure_brew
+install_packages
+prepare_targets
+stow_packages
+install_tpm
+setup_git_identity
 
 info "Done! Open a new shell to pick up the changes."
