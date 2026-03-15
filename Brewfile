@@ -19,3 +19,4 @@ brew "zsh-autosuggestions"
 brew "zsh-syntax-highlighting"
 
 cask "ghostty"
+cask "sublime-text"
