@@ -20,29 +20,15 @@ ensure_brew() {
 }
 
 install_packages() {
-  info "Installing packages via Homebrew..."
+  local brewfile="$DOTFILES_DIR/Brewfile"
 
-  local packages=(
-    stow ghostty tmux git gh lazygit
-    zsh-syntax-highlighting zsh-autosuggestions
-    fzf eza bat ripgrep fd zoxide git-delta
-    dust btop neovim starship
-  )
-  local failed_packages=()
-  local pkg
-
-  for pkg in "${packages[@]}"; do
-    if brew list "$pkg" >/dev/null 2>&1 || brew install "$pkg" 2>/dev/null; then
-      info "Ready: $pkg"
-    else
-      fail "Failed to install $pkg"
-      failed_packages+=("$pkg")
-    fi
-  done
-
-  if [ ${#failed_packages[@]} -gt 0 ]; then
-    warn "Failed packages: ${failed_packages[*]}"
+  if [ ! -f "$brewfile" ]; then
+    fail "Missing Brewfile at $brewfile"
+    exit 1
   fi
+
+  info "Installing packages from Brewfile..."
+  brew bundle --file "$brewfile"
 }
 
 backup_conflict() {
