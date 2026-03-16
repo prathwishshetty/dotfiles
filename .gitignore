@@ -1,3 +1,6 @@
-.claude/
+/.claude/
+!/claude/
+!/claude/.claude/
+!/claude/.claude/**
 .DS_Store
 *.backup

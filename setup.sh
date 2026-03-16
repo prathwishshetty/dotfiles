@@ -3,7 +3,7 @@ set -eu
 set -o pipefail
 
 DOTFILES_DIR="$(cd "$(dirname "$0")" && pwd)"
-PACKAGES=(zsh git tmux ghostty localbin nvim starship)
+PACKAGES=(zsh git tmux ghostty localbin nvim starship claude)
 
 info() { printf '\033[1;34m==> %s\033[0m\n' "$1"; }
 warn() { printf '\033[1;33m==> %s\033[0m\n' "$1"; }
@@ -52,7 +52,7 @@ backup_conflict() {
 }
 
 prepare_targets() {
-  mkdir -p "$HOME/.config/ghostty" "$HOME/.config/nvim" "$HOME/.local/bin"
+  mkdir -p "$HOME/.config/ghostty" "$HOME/.config/nvim" "$HOME/.local/bin" "$HOME/.claude/hooks"
 
   backup_conflict "$HOME/.zshrc"
   backup_conflict "$HOME/.gitconfig"
@@ -61,6 +61,8 @@ prepare_targets() {
   backup_conflict "$HOME/.local/bin/dev-session"
   backup_conflict "$HOME/.config/nvim/init.lua"
   backup_conflict "$HOME/.config/starship.toml"
+  backup_conflict "$HOME/.claude/settings.json"
+  backup_conflict "$HOME/.claude/hooks/force-uv-python.sh"
 }
 
 stow_packages() {
